@@ -93,7 +93,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h2 id="hello">예배의 자리로!</h2>
 <div id="prizeBadge"></div>
 <div id="summary" class="summary"></div>
-<div class="stamp"><b>EYES ON JESUS</b><br>예배를 준비하는 세 가지 약속을 모두 지켰다면,<br>소그룹을 마친 뒤 PASS에 오늘의 예배 도장을 받아요.</div>
+<div class="stamp"><b>EYES ON JESUS</b><br>예배를 준비하는 세 가지 약속을 모두 지켰다면,<br>예배를 준비하는 세 가지 약속을 모두 지켰다면,소그룹을 마친 뒤 오늘의 예배 도장을 받아요</div>
 <button id="resetBtn" style="background:#6A6D67">다른 이름으로 체크인</button>
 </section>
 <div class="footer">09.13 — 10.25 · 7 WEEKS</div>
@@ -179,9 +179,9 @@ submitBtn.addEventListener('click',async()=>{
 
     document.getElementById('summary').innerHTML=
       '<b>'+classSel.value+' · '+nameSel.value+'</b><br>'+
-      '⏰ BEFORE 9&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
-      '📖 OPEN THE WORD&nbsp;&nbsp;'+(bible.checked?'확인 ✓':'성경책 미지참')+'<br>'+
-      '📵 PHONE DOWN&nbsp;&nbsp;다짐 완료 ✓<br>'+
+      '⏰ 9시 전, 예배의 자리에 도착하기!&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
+      '📖 성경책을 가지고 예배에 오기!&nbsp;&nbsp;'+(bible.checked?'확인 ✓':'성경책 미지참')+'<br>'+
+      '📵 예배부터 소그룹까지 핸드폰 내려놓기!&nbsp;&nbsp;다짐 완료 ✓<br>'+
       '<span style="font-size:12px;color:#6a6f80">체크인 '+r.time+'</span>'+
       (r.duplicate?'<br><span style="font-size:12px;color:#8a5b5b">※ 오늘 이미 체크인한 기록이 있어 중복 저장하지 않았어요.</span>':'');
 
