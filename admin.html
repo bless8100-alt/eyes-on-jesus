@@ -59,10 +59,10 @@ td.name{text-align:left;font-weight:700}
     </div>
 
     <div class="stats">
-      <div class="stat"><b id="totalCount">0</b><span>체크인</span></div>
-      <div class="stat"><b id="beforeCount">0</b><span>9시 전</span></div>
-      <div class="stat"><b id="prizeCount">0</b><span>뽑기 대상</span></div>
-      <div class="stat"><b id="bibleCount">0</b><span>성경책 지참</span></div>
+      <div class="stat"><b id="totalCount">0명</b><span>전체 체크인</span></div>
+      <div class="stat"><b id="grade1Count">0명</b><span>중1</span></div>
+      <div class="stat"><b id="grade2Count">0명</b><span>중2</span></div>
+      <div class="stat"><b id="grade3Count">0명</b><span>중3</span></div>
     </div>
 
     <div class="table-wrap">
@@ -95,8 +95,8 @@ async function loadAttendance(){
   try{
     const params={
       p_date:$("dateFilter").value||null,
-      p_grade:$("gradeFilter").value?Number($("gradeFilter").value):null,
-      p_class_name:$("classFilter").value||null
+      p_grade:null,
+      p_class_name:null
     };
     const response=await fetch(SUPABASE_URL+"/rest/v1/rpc/get_attendance_report",{
       method:"POST",
@@ -105,14 +105,20 @@ async function loadAttendance(){
     });
     const data=await response.json();
     if(!response.ok)throw new Error(data.message||"출석 기록을 불러오지 못했습니다.");
-    currentRows=data;
-    $("rows").innerHTML=data.map(r=>'<tr><td>'+safe(r.checkin_time)+'</td><td>'+safe(r.grade)+'</td><td>'+safe(r.class_name)+'</td><td class="name">'+safe(r.student_name)+'</td><td>'+mark(r.before_9)+'</td><td>'+mark(r.prize)+'</td><td>'+mark(r.bible)+'</td><td>'+mark(r.phone)+'</td></tr>').join("");
-    $("empty").style.display=data.length?"none":"block";
+    const selectedGrade=$("gradeFilter").value;
+    const selectedClass=$("classFilter").value;
+    currentRows=data.filter(r=>
+      (!selectedGrade || String(r.grade)===selectedGrade) &&
+      (!selectedClass || r.class_name===selectedClass)
+    );
+
+    $("rows").innerHTML=currentRows.map(r=>'<tr><td>'+safe(r.checkin_time)+'</td><td>'+safe(r.grade)+'</td><td>'+safe(r.class_name)+'</td><td class="name">'+safe(r.student_name)+'</td><td>'+mark(r.before_9)+'</td><td>'+mark(r.prize)+'</td><td>'+mark(r.bible)+'</td><td>'+mark(r.phone)+'</td></tr>').join("");
+    $("empty").style.display=currentRows.length?"none":"block";
     $("empty").textContent="해당 조건의 체크인 기록이 없습니다.";
-    $("totalCount").textContent=data.length;
-    $("beforeCount").textContent=data.filter(r=>r.before_9).length;
-    $("prizeCount").textContent=data.filter(r=>r.prize).length;
-    $("bibleCount").textContent=data.filter(r=>r.bible).length;
+    $("totalCount").textContent=data.length+"명";
+    $("grade1Count").textContent=data.filter(r=>Number(r.grade)===1).length+"명";
+    $("grade2Count").textContent=data.filter(r=>Number(r.grade)===2).length+"명";
+    $("grade3Count").textContent=data.filter(r=>Number(r.grade)===3).length+"명";
   }catch(e){$("dataMessage").textContent=e.message}
   finally{$("loadBtn").disabled=false}
 }
