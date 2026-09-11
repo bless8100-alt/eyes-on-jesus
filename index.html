@@ -134,6 +134,17 @@ const nameSel = document.getElementById('nameSel');
 const bible = document.getElementById('bible');
 const phone = document.getElementById('phone');
 const submitBtn = document.getElementById('submitBtn');
+const LAST_SELECTION_KEY = 'eyes-on-jesus:last-selection';
+
+function saveLastSelection() {
+  try {
+    localStorage.setItem(LAST_SELECTION_KEY, JSON.stringify({
+      grade: grade.value,
+      className: classSel.value,
+      name: nameSel.value
+    }));
+  } catch(e) {}
+}
 
 function jsonp(params) {
   return new Promise((resolve, reject) => {
@@ -185,11 +196,11 @@ grade.addEventListener('change', () => {
   classSel.disabled = !grade.value;
 });
 
-classSel.addEventListener('change', async () => {
+async function loadNames() {
   nameSel.innerHTML = '<option value="">이름을 선택해요</option>';
   nameSel.disabled = true;
   const loading = document.getElementById('nameLoading');
-  if (!classSel.value) { loading.textContent=''; return; }
+  if (!classSel.value) { loading.textContent=''; return false; }
   loading.textContent = '이름을 불러오고 있어요…';
   try {
     const r = await jsonp({action:'names', grade:grade.value, className:classSel.value});
@@ -197,10 +208,34 @@ classSel.addEventListener('change', async () => {
     r.names.forEach(n => nameSel.add(new Option(n,n)));
     nameSel.disabled = false;
     loading.textContent = '';
+    return true;
   } catch(e) {
     loading.textContent = '이름을 불러오지 못했어요. 다시 시도해 주세요.';
+    return false;
   }
-});
+}
+
+classSel.addEventListener('change', loadNames);
+
+async function restoreLastSelection() {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(LAST_SELECTION_KEY));
+  } catch(e) {
+    return;
+  }
+  if (!saved || !saved.grade || !saved.className || !saved.name) return;
+
+  grade.value = saved.grade;
+  grade.dispatchEvent(new Event('change'));
+  if (![...classSel.options].some(option => option.value === saved.className)) return;
+
+  classSel.value = saved.className;
+  if (!await loadNames()) return;
+  if ([...nameSel.options].some(option => option.value === saved.name)) {
+    nameSel.value = saved.name;
+  }
+}
 
 submitBtn.addEventListener('click', async () => {
   if(!grade.value || !classSel.value || !nameSel.value)
@@ -226,6 +261,7 @@ submitBtn.addEventListener('click', async () => {
       return;
     }
 
+    saveLastSelection();
     document.getElementById('hello').textContent = nameSel.value + ' 친구, 예배의 자리로!';
     document.getElementById('prizeBadge').innerHTML = r.prize
       ? '<span class="badge">🎁 뽑기 CHANCE!</span>'
@@ -264,6 +300,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 updateStatus();
+restoreLastSelection();
 </script>
 </body>
 </html>
