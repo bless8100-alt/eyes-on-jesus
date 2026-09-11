@@ -43,7 +43,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .result{display:none;text-align:left}
 .result .big{margin:4px 0 10px;color:var(--blue);font-family:"Inter",sans-serif;font-size:36px;font-weight:800}
 .badge{display:inline-block;margin-top:2px;padding:9px 12px;border-radius:10px;background:var(--yellow);color:var(--blue);font-size:14px;font-weight:800}
-.summary{margin:20px 0;padding:16px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:13.5px;line-height:1.8}
+.summary{margin:20px 0;padding:16px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:13.5px;line-height:1.65}
+.summary-item{margin-top:7px}.summary-detail{display:block;padding-left:24px;margin-top:2px;word-break:keep-all}
 .stamp{margin-top:16px;padding:16px;border:1px dashed rgba(246,162,154,.95);border-radius:12px;font-size:13.5px;line-height:1.65}
 .footer{margin-top:18px;color:#5D6A37;text-align:center;font-size:10.5px;font-weight:500;line-height:1.5}
 .loading{color:var(--muted);font-size:12px;margin-top:7px}
@@ -288,7 +289,8 @@ submitBtn.addEventListener('click', async () => {
     document.getElementById('summary').innerHTML =
       '<b>'+classSel.value+' · '+selectedName+'</b><br>'+
       '⏰ 9시 전, 예배의 자리에 도착하기!&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
-      '📖 성경책 가지고 예배에 오기!&nbsp;&nbsp;'+(bible.checked?'오늘 성경책을 가지고 왔어요. 확인 ✓':'저런! 성경책을 안 가지고 왔어요.<br>&nbsp;&nbsp;&nbsp;&nbsp;다음 주에는 꼭 가져올게요.')+'<br>'+
+      '<div class="summary-item">📖 성경책 가지고 예배에 오기!'+
+      '<span class="summary-detail">'+(bible.checked?'오늘 성경책을 가지고 왔어요. 확인 ✓':'저런! 성경책을 안 가지고 왔어요.<br>다음 주에는 꼭 가져올게요.')+'</span></div>'+
       '📵 예배부터 소그룹까지 핸드폰 내려놓기!&nbsp;&nbsp;다짐 완료 ✓<br>'+
       '<span style="font-size:12px;color:#6a6f80">체크인 '+r.time+'</span>'+
       (r.duplicate ? '<br><span style="font-size:12px;color:#8a5b5b">※ 오늘 이미 체크인한 기록이 있어 중복 저장하지 않았어요.</span>' : '');
