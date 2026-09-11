@@ -125,8 +125,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 
 <script>
-const BACKEND = "https://script.google.com/macros/s/AKfycbyhA3DAooDW-D3Bt_xMPo0Vly7AkSSpQla117tm7WmwM2YtKyRKw-zwNKeOgbR8GHLziw/exec";
-const roster = {"1-1": ["강연우", "김예훈", "김하람", "박연준", "임건", "주하율"], "1-2": ["김단우", "김성훈", "김하율", "박은준", "유서윤", "이도윤"], "1-3": ["기라이", "김민", "노은솔", "양수연", "이예림"], "1-4": ["소아윤", "오윤하", "유하은", "정희엘"], "1-5": ["김서현", "서은유", "이선하", "최인우"], "2-1": ["권시언", "김주원", "이하언", "장동건", "전상우", "조영준"], "2-2": ["김찬승", "김호연", "신주완", "양주원", "우한유", "이재준"], "2-3": ["김시완", "김하진", "성시후", "심온유", "유호준", "임지온"], "2-4": ["고운찬", "공지태", "김동윤", "김민준", "김태연", "최정환"], "2-5": ["오지민", "우한비", "전하연", "최지우"], "2-6": ["노희주", "양하윤", "이윤서", "임한나", "조수아", "진성연"], "2-7": ["권예슬", "김예나", "민하린", "박은혜", "송은지", "우한아"], "3-1": ["김은성", "김하영", "박은율", "이선재", "전지호", "최 솔", "최승준", "최종훈"], "3-2": ["강동아", "김온유", "박상영", "손민수", "신현규", "이노아", "조용우", "허도현"], "3-3": ["강찬", "김주원A", "김주한", "박윤석", "박지원", "송다니엘", "엄주원", "유서진", "장성원", "정인우"], "3-4": ["김희우", "신예은", "이예지", "정지민", "황예나"], "3-5": ["박은유", "소아린", "우소망", "임승주", "임온유", "최선우"], "3-6": ["김예온", "손채원", "안시연", "이희수", "최주은"]};
+const SUPABASE_URL = "https://itxzyskaytnuclwqnnax.supabase.co";
+const SUPABASE_KEY = "sb_publishable_btcXpBgbzpJoOEg27Ti5bA_mbLN_rGY";
 const classesByGrade = {"1": ["1-1", "1-2", "1-3", "1-4", "1-5"], "2": ["2-1", "2-2", "2-3", "2-4", "2-5", "2-6", "2-7"], "3": ["3-1", "3-2", "3-3", "3-4", "3-5", "3-6"]};
 
 const grade = document.getElementById('grade');
@@ -142,42 +142,35 @@ function saveLastSelection() {
     localStorage.setItem(LAST_SELECTION_KEY, JSON.stringify({
       grade: grade.value,
       className: classSel.value,
-      name: nameSel.value
+      studentId: nameSel.value,
+      name: nameSel.options[nameSel.selectedIndex]?.text || ''
     }));
   } catch(e) {}
 }
 
-function jsonp(params) {
-  return new Promise((resolve, reject) => {
-    const cb = '__eoj_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    const script = document.createElement('script');
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error('timeout'));
-    }, 12000);
-
-    function cleanup() {
-      clearTimeout(timeout);
-      delete window[cb];
-      script.remove();
-    }
-
-    window[cb] = data => { cleanup(); resolve(data); };
-    params.callback = cb;
-    params.ts = Date.now();
-
-    const qs = new URLSearchParams(params).toString();
-    script.src = BACKEND + '?' + qs;
-    script.onerror = () => { cleanup(); reject(new Error('network')); };
-    document.body.appendChild(script);
+async function rpc(functionName, params = {}) {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + functionName, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(params)
   });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Supabase request failed');
+  }
+  return data;
 }
 
 async function updateStatus() {
   const box = document.getElementById('before9Auto');
   const text = document.getElementById('before9Text');
   try {
-    const s = await jsonp({action:'status'});
+    const s = await rpc('get_checkin_status');
     box.checked = !!s.before9;
     if (!s.allowed) text.textContent = '오늘은 체크인 운영일이 아니에요.';
     else if (s.before9) text.textContent = '9시 전 도착 ✓';
@@ -203,11 +196,21 @@ async function loadNames() {
   const loading = document.getElementById('nameLoading');
   if (!classSel.value) { loading.textContent=''; return false; }
 
-  const names = roster[classSel.value] || [];
-  names.forEach(name => nameSel.add(new Option(name, name)));
-  nameSel.disabled = names.length === 0;
-  loading.textContent = names.length ? '' : '등록된 이름이 없어요.';
-  return names.length > 0;
+  try {
+    const students = await rpc('get_students', {
+      p_grade: Number(grade.value),
+      p_class_name: classSel.value
+    });
+    students.forEach(student => {
+      nameSel.add(new Option(student.name, String(student.id)));
+    });
+    nameSel.disabled = students.length === 0;
+    loading.textContent = students.length ? '' : '등록된 이름이 없어요.';
+    return students.length > 0;
+  } catch(e) {
+    loading.textContent = '이름을 불러오지 못했어요. 다시 시도해 주세요.';
+    return false;
+  }
 }
 
 classSel.addEventListener('change', loadNames);
@@ -219,7 +222,7 @@ async function restoreLastSelection() {
   } catch(e) {
     return;
   }
-  if (!saved || !saved.grade || !saved.className || !saved.name) return;
+  if (!saved || !saved.grade || !saved.className || (!saved.studentId && !saved.name)) return;
 
   grade.value = saved.grade;
   grade.dispatchEvent(new Event('change'));
@@ -227,9 +230,10 @@ async function restoreLastSelection() {
 
   classSel.value = saved.className;
   if (!await loadNames()) return;
-  if ([...nameSel.options].some(option => option.value === saved.name)) {
-    nameSel.value = saved.name;
-  }
+  const savedOption = [...nameSel.options].find(option =>
+    option.value === String(saved.studentId || '') || option.text === saved.name
+  );
+  if (savedOption) nameSel.value = savedOption.value;
 }
 
 submitBtn.addEventListener('click', async () => {
@@ -242,13 +246,11 @@ submitBtn.addEventListener('click', async () => {
   submitBtn.textContent = 'CHECK-IN 중...';
 
   try {
-    const r = await jsonp({
-      action:'save',
-      grade:grade.value,
-      className:classSel.value,
-      name:nameSel.value,
-      bible:String(bible.checked),
-      phone:String(phone.checked)
+    const selectedName = nameSel.options[nameSel.selectedIndex].text;
+    const r = await rpc('save_checkin', {
+      p_student_id: Number(nameSel.value),
+      p_bible: bible.checked,
+      p_phone: phone.checked
     });
 
     if(!r.ok) {
@@ -257,13 +259,13 @@ submitBtn.addEventListener('click', async () => {
     }
 
     saveLastSelection();
-    document.getElementById('hello').textContent = nameSel.value + ' 친구, 예배의 자리로!';
+    document.getElementById('hello').textContent = selectedName + ' 친구, 예배의 자리로!';
     document.getElementById('prizeBadge').innerHTML = r.prize
       ? '<span class="badge">🎁 뽑기 CHANCE!</span>'
       : '<span class="badge" style="background:#eee;color:#666">오늘의 뽑기는 마감됐어요</span>';
 
     document.getElementById('summary').innerHTML =
-      '<b>'+classSel.value+' · '+nameSel.value+'</b><br>'+
+      '<b>'+classSel.value+' · '+selectedName+'</b><br>'+
       '⏰ BEFORE 9&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
       '📖 OPEN THE WORD&nbsp;&nbsp;'+(bible.checked?'확인 ✓':'성경책 미지참')+'<br>'+
       '📵 PHONE DOWN&nbsp;&nbsp;다짐 완료 ✓<br>'+
