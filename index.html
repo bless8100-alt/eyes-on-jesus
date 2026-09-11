@@ -270,9 +270,9 @@ submitBtn.addEventListener('click', async () => {
 
     document.getElementById('summary').innerHTML =
       '<b>'+classSel.value+' · '+selectedName+'</b><br>'+
-      '⏰ BEFORE 9&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
-      '📖 OPEN THE WORD&nbsp;&nbsp;'+(bible.checked?'확인 ✓':'성경책 미지참')+'<br>'+
-      '📵 PHONE DOWN&nbsp;&nbsp;다짐 완료 ✓<br>'+
+      '⏰ 9시 전, 예배의 자리에 도착하기!&nbsp;&nbsp;'+(r.before9?'자동 확인 ✓':'9시 이후 체크인')+'<br>'+
+      '📖 성경책을 가지고 예배에 오기!&nbsp;&nbsp;'+(bible.checked?'확인 ✓':'성경책 미지참')+'<br>'+
+      '📵 예배부터 소그룹까지 핸드폰 내려놓기!&nbsp;&nbsp;다짐 완료 ✓<br>'+
       '<span style="font-size:12px;color:#6a6f80">체크인 '+r.time+'</span>'+
       (r.duplicate ? '<br><span style="font-size:12px;color:#8a5b5b">※ 오늘 이미 체크인한 기록이 있어 중복 저장하지 않았어요.</span>' : '');
 
